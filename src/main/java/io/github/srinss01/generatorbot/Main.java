@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -50,7 +51,7 @@ public class Main implements CommandLineRunner {
                 try(var linesStream = Files.lines(path)) {
                     List<String> lines = linesStream.filter(it -> !it.isBlank()).toList();
                     Path fileName = path.getFileName();
-                    Database.services.put(fileName.toString().replaceAll("_Accounts\\.txt", ""), lines);
+                    Database.services.put(fileName.toString().replaceAll("_Accounts\\.txt", ""), new ArrayList<>(lines));
                 } catch (IOException e) {
                     logger.error("Error loading services", e);
                 }

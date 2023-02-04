@@ -18,13 +18,15 @@ public class Config {
     private String token;
     private List<String> subscriptionRoleIds;
     private String logChannelId;
+    private Long cooldownTime;
 
     @Override
     public String toString() {
         return "bot:" + '\n' +
                 "  " + "token: " + token + '\n' +
                 "  " + "subscriptionIDs: \n" + ListToYaml(subscriptionRoleIds)
-                + "  " + "logChannelId: " + logChannelId;
+                + "  " + "logChannelId: " + logChannelId
+                + "  " + "cooldownTime: " + cooldownTime;
     }
     private static String ListToYaml(List<String> list) {
         StringBuilder sb = new StringBuilder();

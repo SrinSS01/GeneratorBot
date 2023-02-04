@@ -2,6 +2,7 @@ bot:
   token: ~
   subscriptionIDs: ~
   logChannelId: ~
+  cooldownTime: 0
 
 spring:
   h2:

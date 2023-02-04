@@ -1,6 +1,5 @@
 package io.github.srinss01.generatorbot.commands;
 
-import io.github.srinss01.generatorbot.Main;
 import io.github.srinss01.generatorbot.database.Database;
 import io.github.srinss01.generatorbot.database.ServiceInfo;
 import io.github.srinss01.generatorbot.database.ServiceInfoRepository;
@@ -14,6 +13,7 @@ import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 public class Service extends CommandDataImpl implements ICustomCommand {
@@ -26,8 +26,7 @@ public class Service extends CommandDataImpl implements ICustomCommand {
             new OptionData(OptionType.STRING, "action", "Type of the service", true)
                     .addChoice("Create", "CREATE")
                     .addChoice("Remove", "REMOVE")
-                    .addChoice("Get", "GET")
-                    .addChoice("Reload_from_disk", "RELOAD"),
+                    .addChoice("Get", "GET"),
             new OptionData(OptionType.STRING, "name", "Name of the service", true)
         );
     }
@@ -70,16 +69,20 @@ public class Service extends CommandDataImpl implements ICustomCommand {
                     hook.editOriginal("Service doesn't exist!").queue();
                 }
             }
-            case GET -> interaction.replyEmbeds(new EmbedBuilder()
-                    .setTitle("Service Info")
-                    .addField("Name", format(name), true)
-                    .addField("Service Stock", format(String.valueOf(Database.services.get(name).size())), true)
-                    .addField("File", format(repository.findById(name).map(ServiceInfo::getFile).orElse("Not found")), false)
-                    .setColor(0x2f3136)
-                    .build()).setEphemeral(true).queue();
-            case RELOAD -> {
-                Main.loadServices();
-                interaction.reply("Services reloaded successfully!").setEphemeral(true).queue();
+            case GET -> {
+                List<String> strings = Database.services.get(name);
+                if (strings == null) {
+                    interaction.reply("Service doesn't exist!").setEphemeral(true).queue();
+                    return;
+                }
+                interaction.replyEmbeds(new EmbedBuilder()
+                        .setTitle("Service Info")
+                        .addField("Name", format(name), true)
+                        .addField("Service Stock", format(String.valueOf(strings.size())), true)
+                        .addField("File", format(repository.findById(name).map(ServiceInfo::getFile).orElse("Not found")), false)
+                        .setColor(0x2f3136)
+                        .setTimestamp(interaction.getTimeCreated())
+                        .build()).setEphemeral(true).queue();
             }
         }
     }
@@ -91,7 +94,6 @@ public class Service extends CommandDataImpl implements ICustomCommand {
     private enum ServiceType {
         CREATE,
         REMOVE,
-        GET,
-        RELOAD
+        GET
     }
 }

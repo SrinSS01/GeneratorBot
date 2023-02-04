@@ -1,8 +1,6 @@
 package io.github.srinss01.generatorbot;
 
-import io.github.srinss01.generatorbot.commands.ICustomCommand;
-import io.github.srinss01.generatorbot.commands.Service;
-import io.github.srinss01.generatorbot.commands.Stop;
+import io.github.srinss01.generatorbot.commands.*;
 import io.github.srinss01.generatorbot.database.Database;
 import lombok.val;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -23,15 +21,18 @@ import java.util.Objects;
 
 @Component
 public class Events extends ListenerAdapter {
-    final Database database;
+    private final Database database;
     private final CommandsCollection commandsCollection = new CommandsCollection();
 
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(Events.class);
 
-    public Events(Database database) {
+    public Events(Database database, CooldownManager cooldownManager) {
         this.database = database;
         put(new Stop());
+        put(new ReloadServices());
         put(new Service(database.getServiceInfoRepository()));
+        put(new Services());
+        put(new Generate(database, cooldownManager));
     }
 
     private void put(ICustomCommand command) {
