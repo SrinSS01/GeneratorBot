@@ -13,8 +13,12 @@ public class Services extends CommandDataImpl implements ICustomCommand {
 
     @Override
     public void execute(SlashCommandInteraction interaction) {
-        interaction.deferReply(true).queue();
+        interaction.deferReply().queue();
         InteractionHook hook = interaction.getHook();
+        if (Database.services.isEmpty()) {
+            hook.editOriginal("No services found.").queue();
+            return;
+        }
         EmbedBuilder builder = new EmbedBuilder()
                 .setTitle("Services")
                 .setDescription("List of all the services")

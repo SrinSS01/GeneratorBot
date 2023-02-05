@@ -2,6 +2,7 @@ package io.github.srinss01.generatorbot.commands;
 
 import io.github.srinss01.generatorbot.CooldownManager;
 import io.github.srinss01.generatorbot.database.Database;
+import io.github.srinss01.generatorbot.database.ServiceInfo;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Generate extends CommandDataImpl implements ICustomCommand {
     private final String logChannelId;
@@ -31,15 +33,26 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
     @Override
     public void execute(SlashCommandInteraction interaction) {
         User user = interaction.getUser();
+        String service = Objects.requireNonNull(interaction.getOption("service")).getAsString();
         long userIdLong = user.getIdLong();
-        if (cooldownManager.isOnCooldown(userIdLong)) {
-            interaction.reply("⏱️ You are on cooldown. Please wait another " + cooldownManager.getCooldown(userIdLong)).setEphemeral(true).queue();
+        interaction.deferReply().queue();
+        InteractionHook hook = interaction.getHook();
+        Optional<ServiceInfo> optionalServiceInfo = database.getServiceInfoRepository().findById(service);
+        if (optionalServiceInfo.isEmpty()) {
+            hook.editOriginalEmbeds(new EmbedBuilder()
+                    .setTitle("Error")
+                    .setDescription("Service `" + service + "` does not exist.")
+                    .setColor(0xf04747).build()
+            ).queue();
             return;
         }
-        interaction.deferReply(true).queue();
+        ServiceInfo serviceInfo = optionalServiceInfo.get();
+        Long cooldownTime = serviceInfo.getCooldownTime();
+        if (cooldownManager.isOnCooldown(userIdLong, cooldownTime)) {
+            hook.editOriginal("⏱️ You are on cooldown. Please wait another " + cooldownManager.getTimeLeft(userIdLong, cooldownTime)).queue();
+            return;
+        }
         TextChannel logChannel = Objects.requireNonNull(Objects.requireNonNull(interaction.getGuild()).getTextChannelById(logChannelId));
-        InteractionHook hook = interaction.getHook();
-        String service = Objects.requireNonNull(interaction.getOption("service")).getAsString();
         List<String> strings = Database.services.get(service);
         if (strings == null) {
             hook.editOriginalEmbeds(new EmbedBuilder()
@@ -82,13 +95,11 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
                             .setColor(0x2f3136)
                             .build()
             ).queue();
-            database.getServiceInfoRepository().findById(service).ifPresent(serviceInfo -> {
-                try {
-                    Files.writeString(Path.of(serviceInfo.getFile()), String.join("\n", strings));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+            try {
+                Files.writeString(Path.of(serviceInfo.getFile()), String.join("\n", strings));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }).onErrorFlatMap(error -> {
             hook.editOriginalEmbeds(new EmbedBuilder()
                     .setTitle("Error")

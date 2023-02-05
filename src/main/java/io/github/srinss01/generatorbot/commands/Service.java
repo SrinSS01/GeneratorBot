@@ -1,5 +1,6 @@
 package io.github.srinss01.generatorbot.commands;
 
+import io.github.srinss01.generatorbot.Main;
 import io.github.srinss01.generatorbot.database.Database;
 import io.github.srinss01.generatorbot.database.ServiceInfo;
 import io.github.srinss01.generatorbot.database.ServiceInfoRepository;
@@ -27,7 +28,9 @@ public class Service extends CommandDataImpl implements ICustomCommand {
                     .addChoice("Create", "CREATE")
                     .addChoice("Remove", "REMOVE")
                     .addChoice("Get", "GET"),
-            new OptionData(OptionType.STRING, "name", "Name of the service", true)
+            new OptionData(OptionType.STRING, "name", "Name of the service", true),
+            new OptionData(OptionType.INTEGER, "cooldown", "Cooldown for the service command", false)
+                    .setMinValue(0)
         );
     }
 
@@ -35,6 +38,8 @@ public class Service extends CommandDataImpl implements ICustomCommand {
     public void execute(SlashCommandInteraction interaction) {
         var type = ServiceType.valueOf(Objects.requireNonNull(interaction.getOption("action")).getAsString());
         var name = Objects.requireNonNull(interaction.getOption("name")).getAsString();
+        var cooldownOptional = interaction.getOption("cooldown");
+        var cooldown = cooldownOptional == null ? 0 : cooldownOptional.getAsLong();
         switch (type) {
             case CREATE -> {
                 interaction.deferReply().queue();
@@ -43,8 +48,9 @@ public class Service extends CommandDataImpl implements ICustomCommand {
                 try {
                     boolean newFile = file.createNewFile();
                     if (newFile) {
-                        repository.save(new io.github.srinss01.generatorbot.database.ServiceInfo(name, file.getAbsolutePath()));
+                        repository.save(new io.github.srinss01.generatorbot.database.ServiceInfo(name, file.getAbsolutePath(), cooldown));
                         hook.editOriginal("Service created successfully!").queue();
+                        Main.loadServices();
                     } else {
                         hook.editOriginal("Service already exists!").queue();
                     }

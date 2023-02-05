@@ -17,4 +17,5 @@ public class ServiceInfo {
     @Id
     String name;
     String file;
+    Long cooldownTime;
 }

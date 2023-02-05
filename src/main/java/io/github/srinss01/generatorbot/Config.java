@@ -7,8 +7,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 @EnableConfigurationProperties
 @ConfigurationProperties("bot")
@@ -16,23 +14,12 @@ import java.util.List;
 @Setter
 public class Config {
     private String token;
-    private List<String> subscriptionRoleIds;
     private String logChannelId;
-    private Long cooldownTime;
 
     @Override
     public String toString() {
         return "bot:" + '\n' +
                 "  " + "token: " + token + '\n' +
-                "  " + "subscriptionIDs: \n" + ListToYaml(subscriptionRoleIds)
-                + "  " + "logChannelId: " + logChannelId
-                + "  " + "cooldownTime: " + cooldownTime;
-    }
-    private static String ListToYaml(List<String> list) {
-        StringBuilder sb = new StringBuilder();
-        for (String s : list) {
-            sb.append("    - ").append(s).append('\n');
-        }
-        return sb.toString();
+                "  " + "logChannelId: " + logChannelId;
     }
 }

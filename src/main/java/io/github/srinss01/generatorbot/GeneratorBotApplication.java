@@ -29,13 +29,10 @@ public class GeneratorBotApplication {
             Scanner scanner = new Scanner(System.in);
             System.out.print("Enter bot token: ");
             String token = scanner.nextLine();
-            System.out.print("Enter subscription role IDs (separated by commas): ");
-            String[] subscriptionRoleIds = scanner.nextLine().split("\\s*,\\s*");
             System.out.print("Enter log channel ID: ");
             String logChannelID = scanner.nextLine();
             Config _config = new Config();
             _config.setToken(token);
-            _config.setSubscriptionRoleIds(List.of(subscriptionRoleIds));
             _config.setLogChannelId(logChannelID);
             Files.writeString(properties.toPath(), _config.toString());
             LOGGER.info("Created application.yml file, please restart the bot");

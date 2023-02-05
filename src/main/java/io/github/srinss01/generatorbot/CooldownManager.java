@@ -9,27 +9,26 @@ import java.util.Map;
 @Component
 @AllArgsConstructor
 public class CooldownManager {
-    private final Config config;
     private static final Map<Long, Long> COOLDOWN_MANAGER = new HashMap<>();
 
-    public boolean isOnCooldown(long userId) {
+    public boolean isOnCooldown(long userId, Long cooldownTime) {
         Long aLong = COOLDOWN_MANAGER.get(userId);
         if (aLong == null) {
             return false;
         }
-        return (System.currentTimeMillis() / 1000) - aLong < config.getCooldownTime();
+        return (System.currentTimeMillis() / 1000) - aLong < cooldownTime;
     }
 
     public void setCooldown(long userId) {
         COOLDOWN_MANAGER.put(userId, System.currentTimeMillis() / 1000);
     }
 
-    public String getCooldown(Long userId) {
+    public String getTimeLeft(Long userId, Long cooldownTime) {
         Long aLong = COOLDOWN_MANAGER.get(userId);
         if (aLong == null) {
             return "0";
         }
-        long timeLeft = config.getCooldownTime() - ((System.currentTimeMillis() / 1000) - aLong);
+        long timeLeft = cooldownTime - ((System.currentTimeMillis() / 1000) - aLong);
         return formatDuration(timeLeft);
     }
 

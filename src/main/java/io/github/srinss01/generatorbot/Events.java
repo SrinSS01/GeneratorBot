@@ -2,6 +2,7 @@ package io.github.srinss01.generatorbot;
 
 import io.github.srinss01.generatorbot.commands.*;
 import io.github.srinss01.generatorbot.database.Database;
+import io.github.srinss01.generatorbot.database.ServiceInfoRepository;
 import lombok.val;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -30,7 +31,9 @@ public class Events extends ListenerAdapter {
         this.database = database;
         put(new Stop());
         put(new ReloadServices());
-        put(new Service(database.getServiceInfoRepository()));
+        ServiceInfoRepository serviceInfoRepository = database.getServiceInfoRepository();
+        put(new Service(serviceInfoRepository));
+        put(new SetCooldown(serviceInfoRepository));
         put(new Services());
         put(new Generate(database, cooldownManager));
     }
