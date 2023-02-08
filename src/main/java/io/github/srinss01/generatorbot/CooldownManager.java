@@ -9,22 +9,37 @@ import java.util.Map;
 @Component
 @AllArgsConstructor
 public class CooldownManager {
-    private static final Map<Long, Long> COOLDOWN_MANAGER = new HashMap<>();
+    private static final Map<Long, Map<String, Long>> COOLDOWN_MANAGER = new HashMap<>();
 
-    public boolean isOnCooldown(long userId, Long cooldownTime) {
-        Long aLong = COOLDOWN_MANAGER.get(userId);
+    public boolean isOnCooldown(long userId, String service, Long cooldownTime) {
+        Map<String, Long> userMap = COOLDOWN_MANAGER.get(userId);
+        if (userMap == null) {
+            return false;
+        }
+        Long aLong = userMap.get(service);
         if (aLong == null) {
             return false;
         }
         return (System.currentTimeMillis() / 1000) - aLong < cooldownTime;
     }
 
-    public void setCooldown(long userId) {
-        COOLDOWN_MANAGER.put(userId, System.currentTimeMillis() / 1000);
+    public void setCooldown(long userId, String service) {
+        Map<String, Long> userMap = COOLDOWN_MANAGER.get(userId);
+        if (userMap == null) {
+            userMap = new HashMap<>();
+            userMap.put(service, System.currentTimeMillis() / 1000);
+            COOLDOWN_MANAGER.put(userId, userMap);
+        } else {
+            userMap.put(service, System.currentTimeMillis() / 1000);
+        }
     }
 
-    public String getTimeLeft(Long userId, Long cooldownTime) {
-        Long aLong = COOLDOWN_MANAGER.get(userId);
+    public String getTimeLeft(Long userId, String service, Long cooldownTime) {
+        Map<String, Long> userMap = COOLDOWN_MANAGER.get(userId);
+        if (userMap == null) {
+            return "0";
+        }
+        Long aLong = userMap.get(service);
         if (aLong == null) {
             return "0";
         }

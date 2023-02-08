@@ -38,9 +38,9 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
         interaction.deferReply().queue();
         InteractionHook hook = interaction.getHook();
         Optional<ServiceInfo> optionalServiceInfo = database.getServiceInfoRepository().findById(service);
+        TextChannel logChannel = Objects.requireNonNull(Objects.requireNonNull(interaction.getGuild()).getTextChannelById(logChannelId));
         if (optionalServiceInfo.isEmpty()) {
             hook.editOriginalEmbeds(new EmbedBuilder()
-                    .setTitle("Error")
                     .setDescription("Service `" + service + "` does not exist.")
                     .setColor(0xf04747).build()
             ).queue();
@@ -48,15 +48,19 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
         }
         ServiceInfo serviceInfo = optionalServiceInfo.get();
         Long cooldownTime = serviceInfo.getCooldownTime();
-        if (cooldownManager.isOnCooldown(userIdLong, cooldownTime)) {
-            hook.editOriginal("⏱️ You are on cooldown. Please wait another " + cooldownManager.getTimeLeft(userIdLong, cooldownTime)).queue();
+        if (cooldownManager.isOnCooldown(userIdLong, service, cooldownTime)) {
+            hook.editOriginal("⏱️ You are on cooldown. Please wait another " + cooldownManager.getTimeLeft(userIdLong, service, cooldownTime))
+                    .queue(message -> logChannel.sendMessageEmbeds(
+                            new EmbedBuilder()
+                                    .setDescription("Command execution failed for " + user.getAsMention() + " due to cooldown on `" + service + "`")
+                                    .setColor(0xf0a732)
+                                    .build()
+                    ).queue());
             return;
         }
-        TextChannel logChannel = Objects.requireNonNull(Objects.requireNonNull(interaction.getGuild()).getTextChannelById(logChannelId));
         List<String> strings = Database.services.get(service);
         if (strings == null) {
             hook.editOriginalEmbeds(new EmbedBuilder()
-                    .setTitle("Error")
                     .setDescription("Service `" + service + "` does not exist.")
                     .setColor(0xf04747).build()
             ).queue();
@@ -65,7 +69,6 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
         int size = strings.size();
         if (size == 0) {
             MessageEmbed messageEmbed = new EmbedBuilder()
-                    .setTitle("Error")
                     .setDescription("Service `" + service + "` is out of stock.")
                     .setColor(0xf04747).build();
             hook.editOriginalEmbeds(messageEmbed).queue();
@@ -81,15 +84,15 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
                         .setColor(0x2f3136).build()
         )).onSuccess(message -> {
             hook.editOriginalEmbeds(new EmbedBuilder()
-                    .setTitle("Account Generated")
+                    .setAuthor("Account Generated", null, user.getAvatarUrl())
                     .setDescription("Your generated " + service + " account has been sent to your DM's!")
                     .setColor(0x43b581)
                     .build()).queue();
             strings.remove(index);
-            cooldownManager.setCooldown(userIdLong);
+            cooldownManager.setCooldown(userIdLong, service);
             logChannel.sendMessageEmbeds(
                     new EmbedBuilder()
-                            .setTitle("`" + service + "` Account Generated")
+                            .setAuthor("`" + service + "` Account Generated", null, user.getAvatarUrl())
                             .setDescription("Sent `" + service + "` account to " + user.getAsMention())
                             .addField("Account", "```\n" + account + "\n```", false)
                             .setColor(0x2f3136)
@@ -102,14 +105,12 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
             }
         }).onErrorFlatMap(error -> {
             hook.editOriginalEmbeds(new EmbedBuilder()
-                    .setTitle("Error")
                     .setDescription("Could not send `" + service + "` account to " + user.getAsMention())
                     .addField("Error", "```\n" + error.getMessage() + "\n```", false)
                     .setColor(0xf04747).build()
             ).queue();
             return logChannel.sendMessageEmbeds(
                     new EmbedBuilder()
-                            .setTitle("Error")
                             .setDescription("Could not send `" + service + "` account to " + user.getAsMention())
                             .addField("Error", "```\n" + error.getMessage() + "\n```", false)
                             .setColor(0xf04747).build()
