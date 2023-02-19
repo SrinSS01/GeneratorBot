@@ -3,11 +3,14 @@ package io.github.srinss01.generatorbot;
 import io.github.srinss01.generatorbot.database.Database;
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,19 +33,25 @@ public class Main implements CommandLineRunner {
             return;
         }
         logger.info("Starting bot with token: {}", token);
-        JDABuilder
-                .createDefault(token)
-                .enableIntents(
-                        GUILD_MEMBERS,
-                        GUILD_EMOJIS_AND_STICKERS,
-                        GUILD_VOICE_STATES)
-                .setMemberCachePolicy(MemberCachePolicy.ALL)
-                .addEventListeners(events)
-                .disableCache(
-                        CacheFlag.EMOJI,
-                        CacheFlag.STICKER,
-                        CacheFlag.VOICE_STATE
-                ).build();
+        try {
+            JDABuilder
+                    .createDefault(token)
+                    .enableIntents(
+                            GUILD_MEMBERS,
+                            GUILD_EMOJIS_AND_STICKERS,
+                            GUILD_VOICE_STATES)
+                    .setMemberCachePolicy(MemberCachePolicy.ALL)
+                    .addEventListeners(events)
+                    .disableCache(
+                            CacheFlag.EMOJI,
+                            CacheFlag.STICKER,
+                            CacheFlag.VOICE_STATE
+                    ).build();
+        } catch (InvalidTokenException e) {
+            if (GraphicsEnvironment.isHeadless()) {
+                throw e;
+            } else JOptionPane.showMessageDialog(null, e.getMessage() + "\n" + token, "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public static void loadServices() {

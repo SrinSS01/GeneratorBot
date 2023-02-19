@@ -1,7 +1,6 @@
 bot:
-  token: ~
-  subscriptionIDs: ~
-  logChannelId: ~
+  token: ${TOKEN}
+  logChannelId: ${LOG_CHANNEL_ID}
 
 spring:
   h2:
