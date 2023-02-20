@@ -3,8 +3,8 @@ package io.github.srinss01.generatorbot;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.github.srinss01.generatorbot.auth.ActivationStatus;
 import lombok.val;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 
 import javax.swing.*;
 import java.awt.*;
@@ -91,7 +91,7 @@ public class GeneratorBotApplication {
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(GeneratorBotApplication.class, args);
+        new SpringApplicationBuilder(GeneratorBotApplication.class).headless(headless).run(args);
     }
 
     private static String validateEnv(String keyName) {
