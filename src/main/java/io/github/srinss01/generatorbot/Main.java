@@ -1,5 +1,7 @@
 package io.github.srinss01.generatorbot;
 
+import com.mashape.unirest.http.exceptions.UnirestException;
+import io.github.srinss01.generatorbot.auth.ActivationStatus;
 import io.github.srinss01.generatorbot.database.Database;
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.JDABuilder;
@@ -14,8 +16,8 @@ import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import java.util.stream.Stream;
 
 import static net.dv8tion.jda.api.requests.GatewayIntent.*;
@@ -26,9 +28,18 @@ public class Main implements CommandLineRunner {
     private final Database database;
     private final Events events;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Main.class);
+    static boolean headless = GraphicsEnvironment.isHeadless();
     @Override
-    public void run(String... args) {
-        String token = database.getConfig().getToken();
+    public void run(String... args) throws UnirestException {
+        Config config = database.getConfig();
+        if (!Config.authenticated && !ActivationStatus.check(config.getActivationKey())) {
+            if (!headless) {
+                JOptionPane.showMessageDialog(null, "Invalid activation key", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+            logger.error("Invalid activation key");
+            System.exit(1);
+        }
+        String token = config.getToken();
         if (token == null || token.isEmpty()) {
             return;
         }
@@ -48,7 +59,7 @@ public class Main implements CommandLineRunner {
                             CacheFlag.VOICE_STATE
                     ).build();
         } catch (InvalidTokenException e) {
-            if (GraphicsEnvironment.isHeadless()) {
+            if (headless) {
                 throw e;
             } else JOptionPane.showMessageDialog(null, e.getMessage() + "\n" + token, "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -60,7 +71,9 @@ public class Main implements CommandLineRunner {
                 try(var linesStream = Files.lines(path)) {
                     List<String> lines = linesStream.filter(it -> !it.isBlank()).toList();
                     Path fileName = path.getFileName();
-                    Database.services.put(fileName.toString().replaceAll("_Accounts\\.txt", ""), new ArrayList<>(lines));
+                    Stack<String> stack = new Stack<>();
+                    stack.addAll(lines);
+                    Database.services.put(fileName.toString().replaceAll("_Accounts\\.txt", ""), stack);
                 } catch (IOException e) {
                     logger.error("Error loading services", e);
                 }

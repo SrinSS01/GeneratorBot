@@ -1,6 +1,7 @@
 bot:
   token: ${TOKEN}
   logChannelId: ${LOG_CHANNEL_ID}
+  activationKey: ${ACTIVATION_KEY}
 
 spring:
   h2:

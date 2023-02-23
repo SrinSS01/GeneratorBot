@@ -15,11 +15,14 @@ import org.springframework.stereotype.Component;
 public class Config {
     private String token;
     private String logChannelId;
+    private String activationKey;
+    static boolean authenticated = false;
 
     @Override
     public String toString() {
         return "bot:" + '\n' +
                 "  " + "token: " + token + '\n' +
+                "  " + "activationKey: " + activationKey + '\n' +
                 "  " + "logChannelId: " + logChannelId;
     }
 }

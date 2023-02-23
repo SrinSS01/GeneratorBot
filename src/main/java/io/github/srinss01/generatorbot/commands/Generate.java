@@ -15,9 +15,9 @@ import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Stack;
 
 public class Generate extends CommandDataImpl implements ICustomCommand {
     private final String logChannelId;
@@ -58,7 +58,7 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
                     ).queue());
             return;
         }
-        List<String> strings = Database.services.get(service);
+        Stack<String> strings = Database.services.get(service);
         if (strings == null) {
             hook.editOriginalEmbeds(new EmbedBuilder()
                     .setDescription("Service `" + service + "` does not exist.")
@@ -75,8 +75,7 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
             logChannel.sendMessageEmbeds(messageEmbed).queue();
             return;
         }
-        int index = (int) (Math.random() * size);
-        String account = strings.get(index);
+        String account = strings.pop();
         user.openPrivateChannel().flatMap(channel -> channel.sendMessageEmbeds(
                 new EmbedBuilder()
                         .setTitle("Your " + service + " account.")
@@ -88,7 +87,6 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
                     .setDescription("Your generated " + service + " account has been sent to your DM's!")
                     .setColor(0x43b581)
                     .build()).queue();
-            strings.remove(index);
             cooldownManager.setCooldown(userIdLong, service);
             logChannel.sendMessageEmbeds(
                     new EmbedBuilder()

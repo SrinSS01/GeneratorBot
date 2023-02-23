@@ -57,8 +57,10 @@ public class GeneratorBotApplication {
                 var token = Objects.requireNonNullElse(validateEnv("TOKEN"), ask("Enter bot token: ", "Bot Token"));
                 var logChannelId = Objects.requireNonNullElse(validateEnv("LOG_CHANNEL_ID"), ask("Enter log channel ID: ", "Log Channel ID"));
                 Config _config = new Config();
+                Config.authenticated = true;
                 _config.setToken(token);
                 _config.setLogChannelId(logChannelId);
+                _config.setActivationKey(activationKey);
                 Files.writeString(properties.toPath(), _config.toString());
                 LOGGER.info("Created application.yml file, please restart the bot");
             }
