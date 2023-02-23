@@ -50,7 +50,7 @@ public class Service extends CommandDataImpl implements ICustomCommand {
                     if (newFile) {
                         repository.save(new io.github.srinss01.generatorbot.database.ServiceInfo(name, file.getAbsolutePath(), cooldown));
                         hook.editOriginal("Service created successfully!").queue();
-                        Main.loadServices();
+//                        Main.loadServices();
                     } else {
                         hook.editOriginal("Service already exists!").queue();
                     }

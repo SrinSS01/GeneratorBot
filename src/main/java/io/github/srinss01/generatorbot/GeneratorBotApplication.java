@@ -89,7 +89,7 @@ public class GeneratorBotApplication {
             }
             LOGGER.info("Created services directory");
         }
-        Main.loadServices();
+//        Main.loadServices();
     }
 
     public static void main(String[] args) {

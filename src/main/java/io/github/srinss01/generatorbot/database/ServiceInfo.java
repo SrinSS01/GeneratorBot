@@ -14,6 +14,6 @@ import lombok.Setter;
 public class ServiceInfo {
     @Id
     String name;
-    String file;
+    int accountId;
     Long cooldownTime;
 }
