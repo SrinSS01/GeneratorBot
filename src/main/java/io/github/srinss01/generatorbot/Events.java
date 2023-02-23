@@ -3,7 +3,6 @@ package io.github.srinss01.generatorbot;
 import io.github.srinss01.generatorbot.commands.*;
 import io.github.srinss01.generatorbot.database.Database;
 import io.github.srinss01.generatorbot.database.ServiceInfoRepository;
-import lombok.val;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
@@ -14,8 +13,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Objects;
@@ -30,12 +27,12 @@ public class Events extends ListenerAdapter {
     public Events(Database database, CooldownManager cooldownManager) {
         this.database = database;
         put(new Stop());
-        put(new ReloadServices());
         ServiceInfoRepository serviceInfoRepository = database.getServiceInfoRepository();
-        put(new Service(serviceInfoRepository));
+        put(new Service(database));
         put(new SetCooldown(serviceInfoRepository));
-        put(new Services());
+        put(new Services(serviceInfoRepository));
         put(new Generate(database, cooldownManager));
+        put(new Account(database));
     }
 
     private void put(ICustomCommand command) {
@@ -45,21 +42,6 @@ public class Events extends ListenerAdapter {
     @Override
     public void onReady(ReadyEvent event) {
         logger.info("{} is ready.", event.getJDA().getSelfUser().getName());
-        database.getServiceInfoRepository().findAll().forEach(serviceInfo -> {
-            val serviceFile = new File(serviceInfo.getFile());
-            if (!serviceFile.exists()) {
-                try {
-                    boolean newFile = serviceFile.createNewFile();
-                    if (newFile) {
-                        logger.info("Created file for service: " + serviceInfo.getName());
-                    } else {
-                        logger.error("Error creating file for service: " + serviceInfo.getName());
-                    }
-                } catch (IOException e) {
-                    logger.error("Error creating file for service: " + serviceInfo.getName(), e);
-                }
-            }
-        });
     }
 
     @Override

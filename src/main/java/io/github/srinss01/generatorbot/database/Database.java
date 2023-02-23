@@ -6,7 +6,6 @@ import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -15,6 +14,6 @@ import java.util.Stack;
 @Getter
 public class Database {
     private final ServiceInfoRepository serviceInfoRepository;
+    private final AccountInfoRepository accountInfoRepository;
     private final Config config;
-    public static final Map<String, Stack<String>> services = new HashMap<>();
 }

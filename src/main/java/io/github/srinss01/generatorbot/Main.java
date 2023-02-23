@@ -13,12 +13,6 @@ import org.springframework.stereotype.Component;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Stack;
-import java.util.stream.Stream;
 
 import static net.dv8tion.jda.api.requests.GatewayIntent.*;
 
@@ -62,26 +56,6 @@ public class Main implements CommandLineRunner {
             if (headless) {
                 throw e;
             } else JOptionPane.showMessageDialog(null, e.getMessage() + "\n" + token, "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public static void loadServices() {
-        try (Stream<Path> services = Files.list(Path.of("services"))) {
-            services.forEach(path -> {
-                try(var linesStream = Files.lines(path)) {
-                    List<String> lines = linesStream.filter(it -> !it.isBlank()).toList();
-                    Path fileName = path.getFileName();
-                    Stack<String> stack = new Stack<>();
-                    stack.addAll(lines);
-                    Database.services.put(fileName.toString().replaceAll("_Accounts\\.txt", ""), stack);
-                } catch (IOException e) {
-                    logger.error("Error loading services", e);
-                }
-            });
-        } catch (IOException e) {
-            logger.error("Error loading services", e);
-        } finally {
-            logger.info("Loaded services: {}", Database.services.keySet());
         }
     }
 }

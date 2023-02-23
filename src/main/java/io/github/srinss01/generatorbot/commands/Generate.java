@@ -1,6 +1,8 @@
 package io.github.srinss01.generatorbot.commands;
 
 import io.github.srinss01.generatorbot.CooldownManager;
+import io.github.srinss01.generatorbot.database.AccountInfo;
+import io.github.srinss01.generatorbot.database.AccountInfoRepository;
 import io.github.srinss01.generatorbot.database.Database;
 import io.github.srinss01.generatorbot.database.ServiceInfo;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -12,12 +14,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Stack;
 
 public class Generate extends CommandDataImpl implements ICustomCommand {
     private final String logChannelId;
@@ -58,16 +56,10 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
                     ).queue());
             return;
         }
-        Stack<String> strings = Database.services.get(service);
-        if (strings == null) {
-            hook.editOriginalEmbeds(new EmbedBuilder()
-                    .setDescription("Service `" + service + "` does not exist.")
-                    .setColor(0xf04747).build()
-            ).queue();
-            return;
-        }
-        int size = strings.size();
-        if (size == 0) {
+        var accountId = serviceInfo.getAccountId();
+        AccountInfoRepository accountInfoRepository = database.getAccountInfoRepository();
+        long count = accountInfoRepository.countByAccountId(accountId);
+        if (count == 0) {
             MessageEmbed messageEmbed = new EmbedBuilder()
                     .setDescription("Service `" + service + "` is out of stock.")
                     .setColor(0xf04747).build();
@@ -75,11 +67,23 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
             logChannel.sendMessageEmbeds(messageEmbed).queue();
             return;
         }
-        String account = strings.pop();
+        Optional<AccountInfo> account = accountInfoRepository.findFirst();
+        if (account.isEmpty()) {
+            MessageEmbed messageEmbed = new EmbedBuilder()
+                    .setDescription("Error while fetching account. Please try again later.")
+                    .setColor(0xf04747).build();
+            hook.editOriginalEmbeds(messageEmbed).queue();
+            logChannel.sendMessageEmbeds(messageEmbed).queue();
+            return;
+        }
+        AccountInfo accountInfo = account.get();
+        accountInfoRepository.delete(accountInfo);
+        serviceInfo.setStock(serviceInfo.getStock() - 1);
+        database.getServiceInfoRepository().save(serviceInfo);
         user.openPrivateChannel().flatMap(channel -> channel.sendMessageEmbeds(
                 new EmbedBuilder()
                         .setTitle("Your " + service + " account.")
-                        .setDescription("```\n" + account + "\n```")
+                        .setDescription("```\n" + accountInfo.getDetails() + "\n```")
                         .setColor(0x2f3136).build()
         )).onSuccess(message -> {
             hook.editOriginalEmbeds(new EmbedBuilder()
@@ -92,15 +96,10 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
                     new EmbedBuilder()
                             .setAuthor("`" + service + "` Account Generated", null, user.getAvatarUrl())
                             .setDescription("Sent `" + service + "` account to " + user.getAsMention())
-                            .addField("Account", "```\n" + account + "\n```", false)
+                            .addField("Account", "```\n" + accountInfo.getDetails() + "\n```", false)
                             .setColor(0x2f3136)
                             .build()
             ).queue();
-            try {
-                Files.writeString(Path.of(serviceInfo.getFile()), String.join("\n", strings));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }).onErrorFlatMap(error -> {
             hook.editOriginalEmbeds(new EmbedBuilder()
                     .setDescription("Could not send `" + service + "` account to " + user.getAsMention())

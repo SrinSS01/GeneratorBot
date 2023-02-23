@@ -14,6 +14,8 @@ import lombok.Setter;
 public class ServiceInfo {
     @Id
     String name;
-    int accountId;
-    Long cooldownTime;
+
+    long accountId;
+    long cooldownTime;
+    int stock;
 }

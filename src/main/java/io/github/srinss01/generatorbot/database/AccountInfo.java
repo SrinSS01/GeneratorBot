@@ -12,8 +12,8 @@ public class AccountInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false)
-    private int accountId;
+    private int id;
 
-    @Column(name = "details", nullable = false)
+    private long accountId;
     String details;
 }
