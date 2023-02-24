@@ -40,6 +40,9 @@ public class Account extends CommandDataImpl implements ICustomCommand {
                 new SubcommandData("remove", "Removes an account").addOptions(
                     new OptionData(OptionType.INTEGER, "id", "The id of the account", true),
                     new OptionData(OptionType.STRING, "service", "The name of the service", true)
+                ),
+                new SubcommandData("remove-all", "Removes all the accounts of the service").addOptions(
+                    new OptionData(OptionType.STRING, "service", "The name of the service", true)
                 )
         );
         this.serviceInfoRepository = database.getServiceInfoRepository();
@@ -96,13 +99,39 @@ public class Account extends CommandDataImpl implements ICustomCommand {
                 interaction.getHook().editOriginalEmbeds(
                         new EmbedBuilder()
                                 .setAuthor("Account removed successfully!", null, interaction.getUser().getAvatarUrl())
-                                .addField("Service", service, true)
-                                .addField("Account Id", String.valueOf(id), true)
-                                .addField("Remaining Stock", String.valueOf(stock - 1), true)
-                                .setColor(0x2b2d31)
+                                .addField("Service", Service.format(service), false)
+                                .addField("Account Id", Service.format(String.valueOf(id)), true)
+                                .addField("Remaining Stock", Service.format(String.valueOf(stock - 1)), true)
+                                .setColor(0x43b581)
                                 .build()
                 ).queue();
                 serviceInfo.setStock(stock - 1);
+                serviceInfoRepository.save(serviceInfo);
+            }
+            case "account remove-all" -> {
+                var service = Objects.requireNonNull(interaction.getOption("service")).getAsString();
+                var serviceInfoOptional = serviceInfoRepository.findById(service);
+                if (serviceInfoOptional.isEmpty()) {
+                    interaction.getHook().editOriginal("Service not found!").queue();
+                    return;
+                }
+                var serviceInfo = serviceInfoOptional.get();
+                var accountId = serviceInfo.getAccountId();
+                int rowsAffected = accountInfoRepository.deleteByAccountId(accountId);
+                if (rowsAffected == 0) {
+                    interaction.getHook().editOriginal("Zero accounts removed!").queue();
+                    return;
+                }
+                interaction.getHook().editOriginalEmbeds(
+                        new EmbedBuilder()
+                                .setAuthor("Accounts removed successfully!", null, interaction.getUser().getAvatarUrl())
+                                .addField("Service", Service.format(service), false)
+                                .addField("Accounts Removed", Service.format(String.valueOf(rowsAffected)), true)
+                                .addField("Remaining Stock", Service.format(String.valueOf(0)), true)
+                                .setColor(0x43b581)
+                                .build()
+                ).queue();
+                serviceInfo.setStock(0);
                 serviceInfoRepository.save(serviceInfo);
             }
             case "account create from-text" -> {
@@ -125,7 +154,7 @@ public class Account extends CommandDataImpl implements ICustomCommand {
                                 .addField("Service", Service.format(service), true)
                                 .addField("Account Id", Service.format(String.valueOf(accountInfo.getId())), true)
                                 .addField("Details", Service.format(details), false)
-                                .setColor(0x2b2d31)
+                                .setColor(0x43b581)
                                 .build()
                 ).queue();
                 serviceInfo.setStock(serviceInfo.getStock() + 1);
@@ -165,7 +194,7 @@ public class Account extends CommandDataImpl implements ICustomCommand {
                                             .addField("Service", Service.format(service), true)
                                             .addField("Account Id", Service.format(String.valueOf(accountInfo.getId())), true)
                                             .addField("Details", Service.format(accountDetails), false)
-                                            .setColor(0x2b2d31)
+                                            .setColor(0x43b581)
                                             .build()
                             ).queue();
                             counter++;

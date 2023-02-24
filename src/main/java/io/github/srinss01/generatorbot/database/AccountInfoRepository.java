@@ -13,10 +13,12 @@ public interface AccountInfoRepository extends JpaRepository<AccountInfo, Intege
     @Modifying
     @Query("delete from AccountInfo a where a.id = ?1 and a.accountId = ?2")
     int deleteByIdAndAccountId(int id, long accountId);
-
-    long countByAccountId(long accountId);
     List<AccountInfo> findByAccountId(long accountId);
-    void deleteByAccountId(long accountId);
-    @Query(value = "select * from account_info_db limit 1", nativeQuery = true)
-    Optional<AccountInfo> findFirst();
+
+    @Transactional
+    @Modifying
+    @Query("delete from AccountInfo a where a.accountId = ?1")
+    int deleteByAccountId(long accountId);
+    @Query(value = "select * from account_info_db a where a.account_id = ? limit 1", nativeQuery = true)
+    Optional<AccountInfo> findFirst(long accountId);
 }

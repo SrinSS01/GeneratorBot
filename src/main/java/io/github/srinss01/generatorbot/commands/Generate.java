@@ -58,8 +58,8 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
         }
         var accountId = serviceInfo.getAccountId();
         AccountInfoRepository accountInfoRepository = database.getAccountInfoRepository();
-        long count = accountInfoRepository.countByAccountId(accountId);
-        if (count == 0) {
+        long stock = serviceInfo.getStock();
+        if (stock == 0) {
             MessageEmbed messageEmbed = new EmbedBuilder()
                     .setDescription("Service `" + service + "` is out of stock.")
                     .setColor(0xf04747).build();
@@ -67,7 +67,7 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
             logChannel.sendMessageEmbeds(messageEmbed).queue();
             return;
         }
-        Optional<AccountInfo> account = accountInfoRepository.findFirst();
+        Optional<AccountInfo> account = accountInfoRepository.findFirst(accountId);
         if (account.isEmpty()) {
             MessageEmbed messageEmbed = new EmbedBuilder()
                     .setDescription("Error while fetching account. Please try again later.")
@@ -97,7 +97,7 @@ public class Generate extends CommandDataImpl implements ICustomCommand {
                             .setAuthor("`" + service + "` Account Generated", null, user.getAvatarUrl())
                             .setDescription("Sent `" + service + "` account to " + user.getAsMention())
                             .addField("Account", "```\n" + accountInfo.getDetails() + "\n```", false)
-                            .setColor(0x2f3136)
+                            .setColor(0x2b2d31)
                             .build()
             ).queue();
         }).onErrorFlatMap(error -> {
